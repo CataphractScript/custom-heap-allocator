@@ -60,3 +60,22 @@ static void split_chunk(chunk_t *chunk, uint32_t size) {
         chunk->next = new_chunk;
     }
 }
+
+void *halloc(size_t size) {
+    if (size == 0) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    uint32_t aligned_size = ALIGN8(size);
+    chunk_t *chunk = find_free_chunk(aligned_size);
+    if (!chunk) {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    split_chunk(chunk, aligned_size);
+    chunk->inuse = 1;
+
+    return (void *)((char *)chunk + sizeof(chunk_t));
+}
