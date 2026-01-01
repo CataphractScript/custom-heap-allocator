@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "include/heap.h"
+#include "../include/heap.h"
 
 int main(void) {
     if (hinit(4096) != 0) {
