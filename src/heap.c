@@ -79,3 +79,31 @@ void *halloc(size_t size) {
 
     return (void *)((char *)chunk + sizeof(chunk_t));
 }
+
+static void coalesce() {
+    chunk_t *curr = heap.start;
+    while (curr && curr->next) {
+        if (!curr->inuse && !curr->next->inuse) {
+            curr->size += sizeof(chunk_t) + curr->next->size;
+            curr->next = curr->next->next;
+        } else {
+            curr = curr->next;
+        }
+    }
+}
+
+void hfree(void *ptr) {
+    if (!ptr) {
+        errno = EINVAL;
+        return;
+    }
+
+    chunk_t *chunk = (chunk_t *)((char *)ptr - sizeof(chunk_t));
+    if (!chunk->inuse) {
+        errno = EINVAL;
+        return;
+    }
+
+    chunk->inuse = 0;
+    coalesce();
+}
