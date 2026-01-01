@@ -48,3 +48,15 @@ static chunk_t *find_free_chunk(uint32_t size) {
     }
     return NULL;
 }
+
+static void split_chunk(chunk_t *chunk, uint32_t size) {
+    if (chunk->size >= size + sizeof(chunk_t) + 8) {
+        chunk_t *new_chunk = (chunk_t *)((char *)chunk + sizeof(chunk_t) + size);
+        new_chunk->size = chunk->size - size - sizeof(chunk_t);
+        new_chunk->inuse = 0;
+        new_chunk->next = chunk->next;
+
+        chunk->size = size;
+        chunk->next = new_chunk;
+    }
+}
