@@ -38,3 +38,13 @@ int hinit(size_t size) {
 
     return 0;
 }
+
+static chunk_t *find_free_chunk(uint32_t size) {
+    chunk_t *curr = heap.start;
+    while (curr) {
+        if (!curr->inuse && curr->size >= size)
+            return curr;
+        curr = curr->next;
+    }
+    return NULL;
+}
