@@ -1,9 +1,10 @@
 #include "../include/heap.h"
-#include <sys/mman.h>
 #include <errno.h>
-#include <stdint.h>
 #include <stdio.h>
-
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <sys/mman.h>
 
 typedef struct chunk_t {
     uint32_t size;
