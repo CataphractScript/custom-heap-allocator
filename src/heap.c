@@ -1,8 +1,10 @@
 #include "../include/heap.h"
-#include <sys/mman.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
-
+#include <string.h>
+#include <sys/mman.h>
 
 typedef struct chunk_t {
     uint32_t size;
@@ -16,6 +18,8 @@ typedef struct heap_t {
 };
 
 static struct heap_t heap;
+static chunk_t *pool_start = NULL; // Memory pool
+static size_t pool_total = 0;
 
 #define ALIGN8(x) (((x) + 7) & ~7)
 
@@ -106,4 +110,66 @@ void hfree(void *ptr) {
 
     chunk->inuse = 0;
     coalesce();
+}
+
+void heap_gc() {
+    chunk_t *curr = heap.start;
+    while (curr) {
+        if (curr->inuse && curr->size == 0) {
+            curr->inuse = 0;
+        }
+        curr = curr->next;
+    }
+    coalesce();
+}
+
+int detect_heap_spray(void *ptr) {
+    if (!ptr) return 0;
+    chunk_t *chunk = (chunk_t *)((char *)ptr - sizeof(chunk_t));
+    if (chunk->size > heap.avail / 2) {
+        return 1;
+    }
+    return 0;
+}
+
+void memory_pool_init(size_t pool_size) {
+    pool_total = pool_size;
+    pool_start = (chunk_t *)malloc(pool_size);
+    if (!pool_start) {
+        fprintf(stderr, "Memory pool allocation failed\n");
+        exit(1);
+    }
+    pool_start->size = pool_size - sizeof(chunk_t);
+    pool_start->inuse = 0;
+    pool_start->next = NULL;
+}
+
+void *pool_alloc(size_t size) {
+    if (!pool_start) return NULL;
+    uint32_t aligned_size = ALIGN8(size);
+
+    chunk_t *curr = pool_start;
+    while (curr) {
+        if (!curr->inuse && curr->size >= aligned_size) {
+            // split
+            if (curr->size >= aligned_size + sizeof(chunk_t) + 8) {
+                chunk_t *new_chunk = (chunk_t *)((char *)curr + sizeof(chunk_t) + aligned_size);
+                new_chunk->size = curr->size - aligned_size - sizeof(chunk_t);
+                new_chunk->inuse = 0;
+                new_chunk->next = curr->next;
+                curr->size = aligned_size;
+                curr->next = new_chunk;
+            }
+            curr->inuse = 1;
+            return (void *)((char *)curr + sizeof(chunk_t));
+        }
+        curr = curr->next;
+    }
+    return NULL;
+}
+
+void pool_free(void *ptr) {
+    if (!ptr) return;
+    chunk_t *chunk = (chunk_t *)((char *)ptr - sizeof(chunk_t));
+    chunk->inuse = 0;
 }
