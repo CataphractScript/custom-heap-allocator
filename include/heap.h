@@ -12,5 +12,6 @@ void heap_gc();
 int detect_heap_spray(void *ptr);
 void memory_pool_init(size_t pool_size);
 void *pool_alloc(size_t size);
+void pool_free(void *ptr);
 
 #endif

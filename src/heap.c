@@ -163,3 +163,9 @@ void *pool_alloc(size_t size) {
     }
     return NULL;
 }
+
+void pool_free(void *ptr) {
+    if (!ptr) return;
+    chunk_t *chunk = (chunk_t *)((char *)ptr - sizeof(chunk_t));
+    chunk->inuse = 0;
+}
