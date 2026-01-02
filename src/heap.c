@@ -2,6 +2,7 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <stdint.h>
+#include <stdio.h>
 
 
 typedef struct chunk_t {
@@ -16,6 +17,8 @@ typedef struct heap_t {
 };
 
 static struct heap_t heap;
+static chunk_t *pool_start = NULL; // Memory pool
+static size_t pool_total = 0;
 
 #define ALIGN8(x) (((x) + 7) & ~7)
 
