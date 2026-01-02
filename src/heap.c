@@ -127,3 +127,15 @@ int detect_heap_spray(void *ptr) {
     }
     return 0;
 }
+
+void memory_pool_init(size_t pool_size) {
+    pool_total = pool_size;
+    pool_start = (chunk_t *)malloc(pool_size);
+    if (!pool_start) {
+        fprintf(stderr, "Memory pool allocation failed\n");
+        exit(1);
+    }
+    pool_start->size = pool_size - sizeof(chunk_t);
+    pool_start->inuse = 0;
+    pool_start->next = NULL;
+}
