@@ -139,3 +139,27 @@ void memory_pool_init(size_t pool_size) {
     pool_start->inuse = 0;
     pool_start->next = NULL;
 }
+
+void *pool_alloc(size_t size) {
+    if (!pool_start) return NULL;
+    uint32_t aligned_size = ALIGN8(size);
+
+    chunk_t *curr = pool_start;
+    while (curr) {
+        if (!curr->inuse && curr->size >= aligned_size) {
+            // split
+            if (curr->size >= aligned_size + sizeof(chunk_t) + 8) {
+                chunk_t *new_chunk = (chunk_t *)((char *)curr + sizeof(chunk_t) + aligned_size);
+                new_chunk->size = curr->size - aligned_size - sizeof(chunk_t);
+                new_chunk->inuse = 0;
+                new_chunk->next = curr->next;
+                curr->size = aligned_size;
+                curr->next = new_chunk;
+            }
+            curr->inuse = 1;
+            return (void *)((char *)curr + sizeof(chunk_t));
+        }
+        curr = curr->next;
+    }
+    return NULL;
+}
