@@ -107,3 +107,14 @@ void hfree(void *ptr) {
     chunk->inuse = 0;
     coalesce();
 }
+
+void heap_gc() {
+    chunk_t *curr = heap.start;
+    while (curr) {
+        if (curr->inuse && curr->size == 0) {
+            curr->inuse = 0;
+        }
+        curr = curr->next;
+    }
+    coalesce();
+}
