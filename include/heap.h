@@ -9,5 +9,6 @@ void *halloc(size_t size);
 void hfree(void *ptr);
 
 void heap_gc();
+int detect_heap_spray(void *ptr);
 
 #endif

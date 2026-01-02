@@ -118,3 +118,12 @@ void heap_gc() {
     }
     coalesce();
 }
+
+int detect_heap_spray(void *ptr) {
+    if (!ptr) return 0;
+    chunk_t *chunk = (chunk_t *)((char *)ptr - sizeof(chunk_t));
+    if (chunk->size > heap.avail / 2) {
+        return 1;
+    }
+    return 0;
+}
